@@ -1,9 +1,0 @@
-<launch>
-
-<node pkg="learn_play" type="main" name="main" output="screen"/>
-
-<!-- <node pkg="baxter_demo_museum" type="right_camera" name="right_camera" output="screen"/> -->
-
-<!-- <param name="robot_description_semantic" textfile="$(find baxter_moveit_config)/config/baxter.srdf" /> -->
-
-</launch>
