@@ -60,7 +60,7 @@ class LPVision(object):
         self._roi_move = False
         self._point_selected = -1
         self._gain_slider = 30
-        self._red_thresh = 50
+        self._red_thresh = 30
         # self._yellow_thresh = 100
         self._slider_time = rospy.Time.now()
         self._gain_set = False
@@ -151,8 +151,7 @@ class LPVision(object):
                           100, self._on_gain_slider)
         cv.CreateTrackbar("Red Threshold", "Learn Play game RGB",
                           self._red_thresh, 500, self._on_red_slider)
-        # cv.CreateTrackbar("Yellow Threshold", "Learn Play game RGB",
-        #                   self._yellow_thresh, 500, self._on_yellow_slider)
+        # TODO: create HSV bar for colour
         cv.WaitKey(3)
 
         # projects roi chosen by user
@@ -174,8 +173,8 @@ class LPVision(object):
         hsv = cv2.cvtColor(self._projected, cv2.COLOR_BGR2HSV)
         # lower_red = np.array([165, 60, 60])
         # upper_red = np.array([180, 255, 255])
-        lower_orange = np.array([3, 50, 50])
-        upper_orange = np.array([15, 255, 255])
+        lower_orange = np.array([3, 50, 50]) # TODO: those suck.
+        upper_orange = np.array([16, 255, 255])
         self._red = cv2.inRange(hsv, lower_orange, upper_orange)
         cv.ShowImage('Orange', cv.fromarray(self._red))
         # print rospy.Time.now()
@@ -208,7 +207,7 @@ class LPVision(object):
                         for x in xrange(0, self._square_side_roi, 2):
                             if red[y + y_offset, x + x_offset] == 255:
                                 red_cnt += 1
-                                if red_cnt > self._red_thresh:
+                                if red_cnt > self._red_thresh: # Speed tweak 
                                     cv2.putText(self._image_grid,
                                     'o',
                                     (x_offset + 20, y_offset + 40),
@@ -219,7 +218,7 @@ class LPVision(object):
                                     self._pieces_positions.append((row,col)) 
                                     break
                         if red_cnt > self._red_thresh:
-                            break
+                            break # (sigh)
                                 # else:
                                 #     # print "what"
                                 #     cur_row = False
