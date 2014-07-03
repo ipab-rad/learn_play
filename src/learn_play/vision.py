@@ -23,6 +23,8 @@ from std_msgs.msg import (
   String,
 )
 
+# TODO: Document all the things.
+
 class LPVision(object):
     def __init__(self, limb):
         # Start camera
@@ -54,7 +56,7 @@ class LPVision(object):
 
         # more central
         # roi = region of interest
-        self._roi_points = [[100, 100], [200, 100], [200, 200], [100, 200]]
+        self._roi_points = [[100, 200], [100, 100], [200, 100], [200, 200]] # magic
         self._roi_move = False
         self._point_selected = -1
         self._gain_slider = 30
@@ -72,8 +74,7 @@ class LPVision(object):
         self._grid = [[0 for _i in range(self._no_squares)] for _j in range(self._no_squares)]
         self._pnts = [[0 for i in range(self._square_side_roi + 1)] for j in range(self._square_side_roi + 1)]
 
-        self._user_cnt = 0
-        self._baxter_cnt = 0
+        self._pieces_positions = []
 
         # initialize images
         self._np_image = np.zeros((self._side_roi, self._side_roi, 3), np.uint8)
@@ -186,14 +187,13 @@ class LPVision(object):
         # print '----------'
         self._image_grid = deepcopy(self._projected)
         # print self._image_grid
-        self._user_cnt = 0
-        self._baxter_cnt = 0
+        self._pieces_positions = []
         for col in xrange(self._no_squares):
             cur_row = True
             x_offset = self._square_side_roi * col
             # print "x = ", x_offset
             # Look from the bottom up checking if piece is there
-            for row in xrange(self._no_squares - 1, -1, -1):
+            for row in xrange(self._no_squares):
                 if cur_row == True: # runs first time
                     y_offset = self._square_side_roi * row
                     # print "y = ", y_offset
@@ -216,7 +216,7 @@ class LPVision(object):
                                     2,
                                     (0, 0, 255))
                                     self._grid[row][col] = 1
-                                    self._baxter_cnt += 1
+                                    self._pieces_positions.append((row,col)) 
                                     break
                         if red_cnt > self._red_thresh:
                             break
@@ -235,12 +235,15 @@ class LPVision(object):
                      (0, 255, 0), 1)
             cv.ShowImage('Board State', cv.fromarray(self._image_grid))
 
- 
+    def _transform_positions(self, positions):
+        return [(y, 7 - x) for (x,y) in positions]
 
     def _pub_state(self):
         state = dict()
-        state['baxter_count'] = self._baxter_cnt
-        state['user_count'] = self._user_cnt
+        self._pieces_positions = self._transform_positions(self._pieces_positions)
+        print rospy.Time.now(), " - ", self._pieces_positions
+        state['baxter_count'] = self._pieces_positions
+        # state['user_count'] = self._user_cnt
         state['board'] = self._grid
         self._board_state_pub.publish(str(state))
 
