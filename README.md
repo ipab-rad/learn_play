@@ -1,9 +1,47 @@
 Outline
 =======
 
-* Start baxter
+Reinforcement Learning game of pattern matching between a baxter and a human operator.
 
-* Put right arm to position x, y
+v: 0.1 (*very* alpha)
 
-* Detect chessboard (save coordinates)
- 
+Bug @edran for questions.
+
+Requirements
+============
+
+* `opencv`
+* `ROS hydro`
+* `baxter_interface` in development branch
+
+TODO
+====
+
+* ~~Write ALL THE THINGS IN PYTHON~~
+
+* ~~Detect chessboard and pieces~~
+
+* Put left arm to position x, y (and calibrate (0, 0) wrt the board) at the start
+
+* Write picking movement
+
+* Write AI
+
+Stuff
+=====
+
+* if number_pieces == odd, turn = baxter, else turn = human
+
+* Left arm reaches point x, y, z+epsilon and then it goes to x, y, 0 (to release piece)
+  Linear movements are essential.
+
+
+
+
+
+
+
+
+
+
+
