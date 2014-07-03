@@ -37,9 +37,9 @@ from baxter_core_msgs.srv import (
 class PickPlace(object):
     def __init__(self, limb):
         self._rp = rospkg.RosPack()
-        self._images = (self._rp.get_path('connect_four') +
+        self._images = (self._rp.get_path('learn_play') +
                           '/share/images')
-        self._path = self._rp.get_path('connect_four') + '/config/'
+        self._path = self._rp.get_path('learn_play') + '/config/'
         self._side = limb
         self._limb = baxter_interface.Limb(limb)
 
@@ -393,7 +393,7 @@ class PickPlace(object):
 
 
 def main():
-    rospy.init_node("rsdk_connect_four_test_pick")
+    rospy.init_node("rsdk_learn_play_test_pick")
 
     rs = baxter_interface.RobotEnable()
     print("Enabling robot... ")

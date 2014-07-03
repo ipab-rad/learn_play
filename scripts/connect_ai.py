@@ -18,7 +18,7 @@ import rospy
 
 import rospkg
 
-import connect_four
+import learn_play
 
 
 class PyFour(object):
@@ -26,7 +26,7 @@ class PyFour(object):
 
         self._depth = depth
 
-        self._img_path = (rospkg.RosPack().get_path('connect_four')
+        self._img_path = (rospkg.RosPack().get_path('learn_play')
                           + '/share/')
 
         pygame.init()
@@ -70,7 +70,7 @@ class PyFour(object):
         self.grid = [[0 for _i in range(6)] for _j in range(7)]
         self.rot_grid = [[0 for _i in range(7)] for _j in range(6)]
 
-        self._ai = connect_four.BaxterAI()
+        self._ai = learn_play.BaxterAI()
 
         self.isFirstGame = True
 
@@ -361,7 +361,7 @@ def main():
                         help='skill level (depth of search)')
     args = parser.parse_args(rospy.myargv()[1:])
 
-    rospy.init_node('test_connect_four_ai')
+    rospy.init_node('test_learn_play_ai')
 
     pf = PyFour(args.depth)
     while not rospy.is_shutdown() and pf.isFirstGame:

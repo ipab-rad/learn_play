@@ -4,7 +4,7 @@ import argparse
 
 import rospy
 
-import connect_four
+import learn_play
 
 
 def main():
@@ -13,9 +13,9 @@ def main():
                         required=True, help='limb to control')
     args = parser.parse_args(rospy.myargv()[1:])
 
-    rospy.init_node('connect_four_vision_%s' % (args.limb))
+    rospy.init_node('learn_play_vision_%s' % (args.limb))
 
-    c4v = connect_four.LPVision(args.limb)
+    c4v = learn_play.LPVision(args.limb)
 
     while not rospy.is_shutdown():
         rospy.sleep(1.0)

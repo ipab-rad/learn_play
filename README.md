@@ -1,25 +1,44 @@
 Outline
 =======
 
-* Write ALL THE THINGS IN PYTHON 
+Reinforcement Learning game of pattern matching between a baxter and a human operator.
 
-* Start baxter
+v: 0.1 (*very* alpha)
 
-* Put right arm to position x, y
+Bug @edran for questions.
 
-* Detect chessboard (save coordinates)
+Requirements
+============
+
+* `opencv`
+* `ROS hydro`
+* `baxter_interface` in development branch
+
+TODO
+====
+
+* ~~Write ALL THE THINGS IN PYTHON~~
+
+* ~~Detect chessboard and pieces~~
+
+* Put left arm to position x, y (and calibrate (0, 0) wrt the board) at the start
+
+* Write picking movement
+
+* Write AI
+
+Stuff
+=====
+
+* if number_pieces == odd, turn = baxter, else turn = human
+
+* Left arm reaches point x, y, z+epsilon and then it goes to x, y, 0 (to release piece)
+  Linear movements are essential.
 
 
-ROS
-===
 
-Node from left camera publishes images. (so message is image)
 
-Node that subscribes to camera and analyzes pattern. This publishes
-coordinates of pieces. (so message is some structure of floats)
 
-Node that controls `left_arm` (`cmd_vel`?) will move arm, pick stuff
-etc. It will subscribe to analyzer.
 
 
 

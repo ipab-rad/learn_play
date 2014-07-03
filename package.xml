@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <package>
-  <name>connect_four</name>
+  <name>learn_play</name>
   <version>0.7.0</version>
   <description>
-    Connect four
+    Learn Play
   </description>
 
-  <maintainer email="rsdk.support@rethinkrobotics.com">
-    Rethink Robotics Inc.
+  <maintainer email="n.nardelli@sms.ed.ac.uk">
+    Nantas Nardelli
   </maintainer>
   <license>BSD</license>
-  <url type="website">http://www.rethinkrobotics.com/sdk</url>
+  <url type="website">http://rad.inf.ed.ac.uk</url>
   <url type="repository">
-    https://github.com/RethinkRobotics/baxter_examples
+    https://github.com/ipab-rad/learn_play
   </url>
   <url type="bugtracker">
-    https://github.com/RethinkRobotics/baxter_examples/issues
+    https://github.com/ipab-rad/learn_play/issues
   </url>
-  <author>Rethink Robotics Inc.</author>
+  <author>Nantas Nardelli</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

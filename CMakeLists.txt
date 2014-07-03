@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(connect_four)
+project(learn_play)
 
 find_package(catkin
   REQUIRED

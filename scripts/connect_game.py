@@ -17,7 +17,7 @@ from std_msgs.msg import String
 
 import baxter_interface
 
-import connect_four
+import learn_play
 
 
 class ConnectFour(object):
@@ -74,8 +74,8 @@ class ConnectFour(object):
                 sys.exit(1)
             cnt += 0.1
 
-        self._ai = connect_four.BaxterAI()
-        self._manipulate = connect_four.PickPlace(limb)
+        self._ai = learn_play.BaxterAI()
+        self._manipulate = learn_play.PickPlace(limb)
         self._manipulate.get_locations()
 
         self._manipulate.move_neutral()
@@ -249,7 +249,7 @@ def main():
                         required=True, help='baxter pieces color')
     args = parser.parse_args(rospy.myargv()[1:])
 
-    rospy.init_node('rsdk_connect_four_%s' % (args.limb,))
+    rospy.init_node('rsdk_learn_play_%s' % (args.limb,))
 
     cf = ConnectFour(args.limb, args.color)
 
