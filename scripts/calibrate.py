@@ -41,7 +41,8 @@ class Calibrate(object):
         self._default_pos = {}
         self._square_length = 50 # mm - this will also be the offset
 
-
+        self.pick_pos = {} # picking position
+        self.br_pos = {} # bottom right position (0,7)
         self._dash_io = baxter_interface.DigitalIO(self.limb + '_upper_button')
         self._circle_io = baxter_interface.DigitalIO(self.limb + '_lower_button')
         self._dash_io.state_changed.connect(self._register_pos_one)
@@ -51,6 +52,9 @@ class Calibrate(object):
         ik_srv = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
         self._iksvc = rospy.ServiceProxy(ik_srv, SolvePositionIK)
         self._ikreq = SolvePositionIKRequest()
+
+        circle_io.state_changed.connect(self._pick)
+        dash_io.state_changed.connect(self._place)
 
         
     def _find_joint_position(self, pose):
@@ -105,13 +109,56 @@ class Calibrate(object):
         rospy.sleep(1)
         # print "Final state:", b.state
 
+    def pick_point(self, value):
+        if value:
+            
+    def _save_file(self, file):
+        print "Saving your positions to file!"
+        f = open(file, 'w')
+        f.write('camera=' + str(self.camera_jp) + '\n')
+        f.write('pick=' + str(self.pick_location) + '\n')
+        f.write('pick_approach=' + str(self.pick_approach) + '\n')
+        f.write('neutral=' + str(self.neutral_jp) + '\n')
+        f.close()
+
+    def get_locations(self):
+        good_input = False
+        while not good_input:
+            self.read_file = raw_input("Are you sure you really want to"
+                                       " overwrite your previous changes"
+                                       "(y/n)?")
+            if self.read_file != 'y' and self.read_file != 'n':
+                print "You must answer 'y' or 'n'"
+            
+            elif self.read_file == 'n':
+                print "Alright then: using previous values."
+                good_input = True
+            
+            else:
+                print ("Move the " + self._limb + " arm to the default "
+                       "position (for picking) and "
+                       "press Circle button ")
+                while(len(self.pick_pos) == 0 and not rospy.is_shutdown()):
+                    rospy.sleep(0.1)
+                print ("Default gripping position - Registered.")
+
+                print ("Move same arm to (0, 7) position and press the"
+                       "dash button to record")
+                while(len(self.br_pos) == 0 and not rospy.is_shutdown()):
+                    rospy.sleep(0.1)
+                print ("(0, 7) playing position - Registered.")
+                
+                good_input = True
+
+
+
 def main():
     rospy.init_node("learn_play_calibrate")
     
     rs = baxter_interface.RobotEnable()
     rs.enable()
     cal = Calibrate("left")
-    
+    cal.pick_point()
     
 
 if __name__ == "__main__":
