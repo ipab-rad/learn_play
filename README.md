@@ -14,6 +14,13 @@ Requirements
 * `ROS hydro`
 * `baxter_interface` in development branch
 
+Running the demo
+================
+
+* `rosrun learn_play calibrate.py`
+* Start the vision (and calibrate it)
+* Start the game
+
 TODO
 ====
 
