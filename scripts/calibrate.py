@@ -60,24 +60,17 @@ class Calibrate(object):
 
         self._circle_io.state_changed.connect(self._default_point)
         self._should_io.state_changed.connect(self._neutral_point)
-        self._dash_io.state_changed.connect(self._bottom_right_point)
+        self._dash_io.state_changed.connect(self._zero_point)
 
 
     def _find_joint_position(self, pose, x_off = 0.0, y_off = 0.0, z_off = 0.0):
         ik_request = SolvePositionIKRequest()
-        # try:
-        #     print 
-        #     pose['position'] = Point(x=pose['position'][0] + x_off,
-        #                              y=pose['position'][1] + y_off,
-        #                              z=pose['position'][2] + z_off
-        #                              )
-        # except Exception:
+
         the_pose = deepcopy(pose)
         the_pose['position'] = Point(x=pose['position'].x + x_off,
                                  y=pose['position'].y + y_off,
                                  z=pose['position'].z + z_off
                                  )
-        print the_pose
         approach_pose = Pose()
         approach_pose.position = the_pose['position']
         approach_pose.orientation = the_pose['orientation']
@@ -91,7 +84,6 @@ class Calibrate(object):
 
     def _blink_light(self, io_component='left_itb_light_outer'):
         """Blinks a Digital Output on then off."""
-        # rospy.loginfo("Blinking Digital Output: %s", io_component)
         b = baxter_interface.digital_io.DigitalIO(io_component)
         
         print "Initial state: ", b.state
@@ -99,17 +91,16 @@ class Calibrate(object):
         # turn on light
         b.set_output(True)
         rospy.sleep(1)
-        # print "New state: ", b.state
 
         # reset output
         b.set_output(False)
         rospy.sleep(1)
-        # print "Final state:", b.state
 
 
     def _default_point(self, value):
         if value:                
             if len(self._default_pos) == 0:
+                self._blink_light()
                 # Record default position
                 print 'Recording default location'
                 self._default_pos[0] = self._baxter_limb.joint_angles()
@@ -123,16 +114,18 @@ class Calibrate(object):
     def _neutral_point(self, value):
         if value:                
             if len(self._neutral_pos) == 0:
-                # Record default position
+                self._blink_light()
+                # Record neutral position
                 print 'Recording neutral location'
                 self._neutral_pos = self._baxter_limb.joint_angles()
                 self._neutral_bool = False
 
 
-    def _bottom_right_point(self, value): # 7, 0
+    def _zero_point(self, value): # 0, 0
         if value:                
             if len(self.br_pos) == 0:
-                # Record default position
+                self._blink_light()
+                # Record 0_0 position
                 print 'Recording pick location'
                 self.br_pos[0] = self._baxter_limb.joint_angles()
                 self._the_pose = self._baxter_limb.endpoint_pose()
@@ -209,7 +202,6 @@ class Calibrate(object):
                        "position (for picking) and "
                        "press Circle button ")
                 while(len(self._neutral_pos) == 0 and not rospy.is_shutdown()):
-                    # print "lol"
                     rospy.sleep(0.1)
                 print ("Default gripping position - Registered.")
 
@@ -224,9 +216,31 @@ class Calibrate(object):
                 if len(missed) != 0:
                     print "The IK generator has missed the following positions"
                     print missed
+                else:
+                    print "Saving your new configuration!"
+                    self._save_file(self._config_path + "positions.config")
 
                 good_input = True
+    
 
+    def test(self):
+        self._baxter_limb.move_to_joint_positions(self._neutral_pos)
+        print "Going to position 0,0"
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,0)][1])
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,0)][0])
+        self._baxter_limb.move_to_joint_positions(self._neutral_pos)
+        print "Going to position 0,7"
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,7)][1])
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,7)][0])
+        self._baxter_limb.move_to_joint_positions(self._neutral_pos)
+        print "Going to position 7,0"
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,0)][1])
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,0)][0])
+        self._baxter_limb.move_to_joint_positions(self._neutral_pos)
+        print "Going to position 7,7"
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,7)][1])
+        self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,7)][0])
+        self._baxter_limb.move_to_joint_positions(self._neutral_pos)
 
 def main():
     rospy.init_node("learn_play_calibrate")
@@ -235,29 +249,7 @@ def main():
     rs.enable()
     cal = Calibrate("left")
     cal.get_locations()
-    for i in range(8):
-        for k in range(8):
-            print "Go to pos", i, ",", k
-            cal._baxter_limb.move_to_joint_positions(cal._neutral_pos)
-            cal._baxter_limb.move_to_joint_positions(cal.chess_pos[(i, k)][1])
-            cal._baxter_limb.move_to_joint_positions(cal.chess_pos[(i, k)][0])
-            cal._baxter_limb.move_to_joint_positions(cal.chess_pos[(i, k)][1])
-    # cal._baxter_limb.move_to_joint_positions(cal._neutral_pos)
-    # l = cal.chess_pos[(0,0)][0]
-    # print l
-    # cal._baxter_limb.move_to_joint_positions(l)
-    # cal._baxter_limb.move_to_joint_positions(cal._neutral_pos)
-    # l2 = cal.chess_pos[(0,0)][0]
-    # print l2
-    # cal._baxter_limb.move_to_joint_positions(l2)
-    # cal._baxter_limb.move_to_joint_positions(cal._neutral_pos)
-    # l3 = cal.br_pos[1]
-    # print l3
-    # cal._baxter_limb.move_to_joint_positions(l3)
-    # cal._baxter_limb.move_to_joint_positions(cal._neutral_pos)
-    # l4 = cal.br_pos[0]
-    # print l4
-    # cal._baxter_limb.move_to_joint_positions(l4)
+    cal.test()
 
 if __name__ == "__main__":
     sys.exit(main())
