@@ -34,7 +34,7 @@ class LPVision(object):
         self._camera = baxter_interface.CameraController(self._camera_name)
         self._camera.open()
         self._camera.resolution = [1280, 800]
-        self._camera.gain = 30
+        self._camera.gain = 20
 
         self._side_roi = 400
         self._no_squares = 8

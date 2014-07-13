@@ -14,6 +14,13 @@ Requirements
 * `ROS hydro`
 * `baxter_interface` in development branch
 
+Running the demo
+================
+
+* `rosrun learn_play calibrate.py`
+* Start the vision (and calibrate it)
+* Start the game
+
 TODO
 ====
 
@@ -21,7 +28,9 @@ TODO
 
 * ~~Detect chessboard and pieces~~
 
-* Put left arm to position x, y (and calibrate (0, 0) wrt the board) at the start
+* ~~Put left arm to position x, y (and calibrate (0, 0) wrt the board) at the start~~
+
+* Write calibration script for playing arm
 
 * Write picking movement
 
