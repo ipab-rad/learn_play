@@ -30,9 +30,9 @@ TODO
 
 * ~~Put left arm to position x, y (and calibrate (0, 0) wrt the board) at the start~~
 
-* Write calibration script for playing arm
+* ~~Write calibration script for playing arm~~
 
-* Write picking movement
+* ~~Write picking movement~~ (ish)
 
 * Write AI
 
