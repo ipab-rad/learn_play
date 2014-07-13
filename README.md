@@ -34,6 +34,10 @@ TODO
 
 * ~~Write picking movement~~ (ish)
 
+* Decide what kind of data to model
+
+* Use pygame to draw grid
+
 * Write AI
 
 Stuff
