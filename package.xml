@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>learn_play</name>
-  <version>0.7.0</version>
+  <version>0.1</version>
   <description>
     Learn Play
   </description>
@@ -10,7 +10,7 @@
     Nantas Nardelli
   </maintainer>
   <license>BSD</license>
-  <url type="website">http://rad.inf.ed.ac.uk</url>
+  <url type="website">https://github.com/ipab-rad/learn_play</url>
   <url type="repository">
     https://github.com/ipab-rad/learn_play
   </url>
