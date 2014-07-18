@@ -26,7 +26,6 @@ from baxter_core_msgs.srv import (
     SolvePositionIKRequest,
 )
 
-
 import learn_play
 
 class Calibrate(object):
@@ -61,9 +60,7 @@ class Calibrate(object):
         self._iksvc = rospy.ServiceProxy(ik_srv, SolvePositionIK)
         self._ikreq = SolvePositionIKRequest()
 
-        self._circle_io.state_changed.connect(self._default_point)
-        self._should_io.state_changed.connect(self._neutral_point)
-        self._dash_io.state_changed.connect(self._zero_point)
+        self._circle_io.state_changed.connect(self._default_points)
         self.done_calibration = False
 
 
@@ -104,7 +101,7 @@ class Calibrate(object):
         rospy.sleep(1)
 
 
-    def _default_point(self, value):
+    def _default_points(self, value):
         """
         Registers the picking point
         """
@@ -118,32 +115,19 @@ class Calibrate(object):
                 self._default_pos[1] = self._find_joint_position(
                                          self._baxter_limb.endpoint_pose(),
                                          z_off = 0.10)
-        
-    
-    def _neutral_point(self, value):
-        """
-        Registers the central neutral point. Otherwise the arm could
-        move somewhere below the table while moving to the chessboard
-        positions.
-        """
-
-        if value:                
-            if len(self._neutral_pos) == 0:
+            # Registers the central neutral point. Otherwise the arm
+            # could move somewhere below the table while moving to the
+            # chessboard positions.
+            elif len(self._neutral_pos) == 0:
                 self._blink_light()
                 # Record neutral position
                 print 'Recording neutral location'
                 self._neutral_pos = self._baxter_limb.joint_angles()
-                self._neutral_bool = False
-
-
-    def _zero_point(self, value): # 0, 0
-        """
-        Registers the (0,0) point *just* above the table (1|2mm). Will
-        be used to generate all the rest of points.
-        """
-
-        if value:                
-            if len(self.br_pos) == 0:
+                self._neutral_bool = False 
+            # Registers the (0,0) point *just* above the table
+            # (1|2mm). Will be used to generate all the rest of
+            # points.
+            elif len(self.br_pos) == 0:
                 self._blink_light()
                 print 'Recording pick location'
                 self.br_pos[0] = self._baxter_limb.joint_angles()
@@ -151,6 +135,8 @@ class Calibrate(object):
                 self.br_pos[1] = self._find_joint_position(
                                          self._the_pose,
                                          z_off = 0.10)
+            else:
+                print "Stop pressing! You have already calibrated!"
 
 
     def generate_positions(self):
@@ -167,7 +153,7 @@ class Calibrate(object):
                 for x in range(8):
                     x_o = -0.05*x
                     y_o = y * 0.05
-                    t = (y,x) # yep
+                    t = (y,x) # yep.
                     one = self._find_joint_position(
                         cur_bottom_pose,
                         x_off = x_o,
@@ -224,20 +210,20 @@ class Calibrate(object):
             else:
                 print ("Move the " + self._limb + " arm to the default "
                        "position (for picking) and "
-                       "press Circle button ")
+                       "press the circle button ")
                 while(len(self._default_pos) == 0 and not rospy.is_shutdown()):
                     rospy.sleep(0.1)
                 print ("Default gripping position - Registered.")
 
                 print ("Move the " + self._limb + " arm to the neutral "
                        "position (for picking) and "
-                       "press Circle button ")
+                       "press the circle button ")
                 while(len(self._neutral_pos) == 0 and not rospy.is_shutdown()):
                     rospy.sleep(0.1)
                 print ("Default gripping position - Registered.")
 
                 print ("Move same arm to (0,0) position and press the"
-                       "dash button to record")
+                       "cirle button to record")
                 while(len(self.br_pos) == 0 and not rospy.is_shutdown()):
                     rospy.sleep(0.1)
                 print "Well done!"
@@ -248,6 +234,8 @@ class Calibrate(object):
                 if len(missed) != 0:
                     print "The IK generator has missed the following positions"
                     print missed
+                    print "You will now repeat the calibration. Try again :)"
+                    # todo add manual partial calibration
                 else:
                     print "Saving your new configuration!"
                     self._save_file(self._config_path + "positions.config")
@@ -286,6 +274,7 @@ def main():
     cal = Calibrate("left")
     cal.get_locations()
     cal.test()
+
 
 if __name__ == "__main__":
     sys.exit(main())
