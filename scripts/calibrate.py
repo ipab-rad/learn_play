@@ -47,7 +47,7 @@ class Calibrate(object):
         self._neutral_bool = False
         self._default_bool = True
 
-        self.chess_pos = {} # dict of list (tuple) of dict (sigh)
+        self._chess_pos = {} # dict of list (tuple) of dict (sigh)
 
         self.pick_pos = {} # picking position
         self.br_pos = {} # bottom right position (7,0)
@@ -153,7 +153,7 @@ class Calibrate(object):
                 for x in range(8):
                     x_o = -0.05*x
                     y_o = y * 0.05
-                    t = (y,x) # yep.
+                    t = (y,x) # yep
                     one = self._find_joint_position(
                         cur_bottom_pose,
                         x_off = x_o,
@@ -166,15 +166,15 @@ class Calibrate(object):
                         z_off = 0.10
                     )
                     rospy.sleep(0.1)
-                    self.chess_pos[t] = [one, two]
-                    if len(self.chess_pos[t][0]) == 0:
+                    self._chess_pos[t] = [one, two]
+                    if len(self._chess_pos[t][0]) == 0:
                         missed_pos.append((t, "bottom"))
-                    if len(self.chess_pos[t][1]) == 0:
+                    if len(self._chess_pos[t][1]) == 0:
                         missed_pos.append((t, "top"))
             return missed_pos
 
 
-    def _save_file(self, file):
+    def _save_config(self, file):
         """
         Saves positions to config file.
         """
@@ -186,7 +186,7 @@ class Calibrate(object):
         for x in range(8):
             for y in range(8):
                 t = (x,y)
-                f.write(str(t) + "=" + str(self.chess_pos[t]) + '\n')
+                f.write(str(t) + "=" + str(self._chess_pos[t]) + '\n')
         f.close()
 
 
@@ -238,7 +238,7 @@ class Calibrate(object):
                     # todo add manual partial calibration
                 else:
                     print "Saving your new configuration!"
-                    self._save_file(self._config_path + "positions.config")
+                    self._save_config(self._config_path + "positions.config")
                     self.done_calibration = True
     
 
@@ -250,20 +250,20 @@ class Calibrate(object):
         if self.done_calibration:
             self._baxter_limb.move_to_joint_positions(self._neutral_pos)
             print "Going to position 0,0"
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,0)][1])
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,0)][0])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(0,0)][1])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(0,0)][0])
             self._baxter_limb.move_to_joint_positions(self._neutral_pos)
             print "Going to position 0,7"
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,7)][1])
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(0,7)][0])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(0,7)][1])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(0,7)][0])
             self._baxter_limb.move_to_joint_positions(self._neutral_pos)
             print "Going to position 7,0"
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,0)][1])
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,0)][0])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(7,0)][1])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(7,0)][0])
             self._baxter_limb.move_to_joint_positions(self._neutral_pos)
             print "Going to position 7,7"
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,7)][1])
-            self._baxter_limb.move_to_joint_positions(self.chess_pos[(7,7)][0])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(7,7)][1])
+            self._baxter_limb.move_to_joint_positions(self._chess_pos[(7,7)][0])
             self._baxter_limb.move_to_joint_positions(self._neutral_pos)
 
 
