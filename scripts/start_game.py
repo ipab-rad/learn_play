@@ -49,6 +49,8 @@ class LearnPlay(object):
             exit(0)
         self._read_config()
 
+        
+
 
     def _check_config(self):
         ri = ""
@@ -131,8 +133,9 @@ class LearnPlay(object):
                 
         
 def main():
+    
     limb = "left"
-    rospy.init_node('rsdk_learn_play_%s' % (limb,)) 
+    rospy.init_node('rsdk_learn_play_%s' % (limb)) 
     lp = LearnPlay(limb)
     while(1):
         for i in range(8):
