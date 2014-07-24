@@ -56,7 +56,10 @@ class LPVision(object):
 
         # more central
         # roi = region of interest
-        self._roi_points = [[100, 200], [100, 100], [200, 100], [200, 200]] # magic
+        self._roi_points = [[100, 200], 
+                            [100, 100],
+                            [200, 100], 
+                            [200, 200]] # magic
         self._roi_move = False
         self._point_selected = -1
         self._gain_slider = 30
@@ -79,7 +82,6 @@ class LPVision(object):
         # initialize images
         self._np_image = np.zeros((self._side_roi, self._side_roi, 3), np.uint8)
         self._image_grid = np.zeros((self._side_roi, self._side_roi, 3), np.uint8)
-        # self._yellow = np.zeros((self._side_roi, self._side_roi), np.uint8)
         self._red = np.zeros((self._side_roi, self._side_roi), np.uint8)
         self._projected = np.zeros((self._side_roi, self._side_roi, 3), np.uint8)
 
@@ -146,7 +148,7 @@ class LPVision(object):
 
         cv.ShowImage("Learn Play game RGB", cv.fromarray(local_image))
 
-        cv.SetMouseCallback("Learn Play game RGB", self._on_mouse_click, 0)
+        cv.SetMouseCallback("Learn Play game RGB", sel_on_mouse_click, 0)
         cv.CreateTrackbar("Gain", "Learn Play game RGB", self._gain_slider,
                           100, self._on_gain_slider)
         cv.CreateTrackbar("Red Threshold", "Learn Play game RGB",
@@ -158,15 +160,26 @@ class LPVision(object):
 
     def _project_roi(self):
         warped_in = np.float32([np.array(self._roi_points)])
-        project_out = np.float32([[0, 0], [self._side_roi, 0], [self._side_roi, self._side_roi], [0, self._side_roi]])
+        project_out = np.float32([[0, 0], 
+                                  [self._side_roi, 0], 
+                                  [self._side_roi, self._side_roi],
+                                  [0, self._side_roi]])
         M = cv2.getPerspectiveTransform(warped_in, project_out)
         self.subLock.acquire(True)
         local_image = deepcopy(self._np_image)
         self.subLock.release()
-        self._projected = cv2.warpPerspective(local_image, M, (self._side_roi, self._side_roi))
+        self._projected = cv2.warpPerspective(local_image, 
+                                              M,
+                                              (self._side_roi,
+                                               self._side_roi))
         # ENHANCE! *puts glasses on*
         self._blurred = cv2.GaussianBlur(self._projected, (0,0), 3)
-        self._projected = cv2.addWeighted(self._projected, 1.5, self._blurred, -0.5, 0, self._projected)
+        self._projected = cv2.addWeighted(self._projected, 
+                                          1.5,
+                                          self._blurred,
+                                          -0.5,
+                                          0,
+                                          self._projected)
 
     def _filter_red(self):
         # Finds red colors in HSV space
@@ -181,7 +194,8 @@ class LPVision(object):
 
     def _process_colors(self, red):
         # look down each column building up from bottom
-        self._grid = [[0 for _i in range(self._no_squares)] for _j in range(self._no_squares)]
+        self._grid = [[0 for _i in range(self._no_squares)] 
+                      for _j in range(self._no_squares)]
         # print self._grid
         # print '----------'
         self._image_grid = deepcopy(self._projected)
@@ -197,7 +211,6 @@ class LPVision(object):
                     y_offset = self._square_side_roi * row
                     # print "y = ", y_offset
                     red_cnt = 0
-                    # yellow_cnt = 0
                     # look though each pixel in current grid location
                     if len(red) != self._side_roi:
                         print 'BAILING - IMAGE SIZE IS UNEXPECTED'
@@ -226,12 +239,18 @@ class LPVision(object):
 
     def _update_image_grid(self):
         for idx in xrange(1, self._no_squares):
-            cv2.line(self._image_grid, (self._square_side_roi * idx, 0), (self._square_side_roi * idx, self._side_roi),
-                     (0, 255, 0), 1)
+            cv2.line(self._image_grid, 
+                     (self._square_side_roi * idx, 0), 
+                     (self._square_side_roi * idx, self._side_roi),
+                     (0, 255, 0), 
+                     1)
             cv2.line(self._image_grid, (0, self._square_side_roi * idx), (self._side_roi, self._square_side_roi * idx),
                      (0, 255, 0), 1)
-            cv2.line(self._image_grid, (self._square_side_roi * self._no_squares, 0), (self._square_side_roi * self._no_squares, self._side_roi),
-                     (0, 255, 0), 1)
+            cv2.line(self._image_grid,
+                     (self._square_side_roi * self._no_squares, 0),
+                     (self._square_side_roi * self._no_squares, self._side_roi),
+                     (0, 255, 0),
+                     1)
             cv.ShowImage('Board State', cv.fromarray(self._image_grid))
 
     def _transform_positions(self, positions):
