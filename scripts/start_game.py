@@ -47,7 +47,7 @@ class LearnPlay(object):
         self._no_pieces = 0 # Number of pieces on board
         if (not self._check_config()):
             exit(0)
-        self._read_config()
+        self._read_config(self._config_path)
 
         
 
@@ -134,7 +134,7 @@ class LearnPlay(object):
         
 def main():
     
-    limb = "left"
+    limb = "right"
     rospy.init_node('rsdk_learn_play_%s' % (limb)) 
     lp = LearnPlay(limb)
     while(1):
