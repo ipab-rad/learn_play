@@ -11,17 +11,17 @@ from cv_bridge import CvBridge
 import rospy
 import baxter_interface
 
-# from geometry_msgs.msg import (
-#   PolygonStamped,
-# )
+from geometry_msgs.msg import (
+    PolygonStamped,
+)
 
-# from sensor_msgs.msg import (
-#   Image,
-# )
+from sensor_msgs.msg import (
+    Image,
+)
 
-# from std_msgs.msg import (
-#   String,
-# )
+from std_msgs.msg import (
+    String,
+)
 
 # TODO: Document all the things.
 
@@ -95,22 +95,22 @@ class LPVision(object):
 
         self.subLock = threading.Lock()
 
-        # camera_topic = '/cameras/' + self._camera_name + '/image'
-        # _camera_sub = rospy.Subscriber(
-        #     camera_topic,
-        #     Image,
-        #     self._on_camera)
+        camera_topic = '/cameras/' + self._camera_name + '/image'
+        _camera_sub = rospy.Subscriber(
+            camera_topic,
+            Image,
+            self._on_camera)
 
-        # roi_topic = '/learn_play/localize/grid_pixels'
-        # _roi_sub = rospy.Subscriber(
-        #     roi_topic,
-        #     PolygonStamped,
-        #     self._on_roi)
+        roi_topic = '/learn_play/localize/grid_pixels'
+        _roi_sub = rospy.Subscriber(
+            roi_topic,
+            PolygonStamped,
+            self._on_roi)
 
-        # board_state_topic = '/vision/learn_play_state'
-        # self._board_state_pub = rospy.Publisher(
-        #     board_state_topic,
-        #     String)
+        board_state_topic = '/vision/learn_play_state'
+        self._board_state_pub = rospy.Publisher(
+            board_state_topic,
+            String)
 
         print ' - All set - '
         print " - - - - - - - "

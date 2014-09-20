@@ -23,9 +23,10 @@ class LearnPlay(object):
         # Grid state
         #  0 - free
         #  1 - occupied
-        
+
         self._rp = rospkg.RosPack()
-        self._config_path = self._rp.get_path('learn_play') + '/config/positions.config'
+        self._config_path = self._rp.get_path('learn_play') +\
+            '/config/positions.config'
 
         self._limb = limb
         self._baxter_limb = baxter_interface.Limb(self._limb)
@@ -37,20 +38,17 @@ class LearnPlay(object):
         self._neutral_pos = {}
         self._chess_pos = {}
         self.picked = False
-       
+
         self._no_squares = 8
-        self._grid = ([[0 for _i in range(self._no_squares)] 
+        self._grid = ([[0 for _i in range(self._no_squares)]
                       for _j in range(self._no_squares)])
-        
-        self.game_off  = False
-        self._turn = 0 # 1, 2 = baxter, human
-        self._no_pieces = 0 # Number of pieces on board
+
+        self.game_off = False
+        self._turn = 0  # 1, 2 = baxter, human
+        self._no_pieces = 0  # Number of pieces on board
         if (not self._check_config()):
             exit(0)
         self._read_config(self._config_path)
-
-        
-
 
     def _check_config(self):
         ri = ""
@@ -67,7 +65,7 @@ class LearnPlay(object):
         """
         Read positions from config file.
         """
-        
+
         print "Reading positions from file."
         f = open(file, 'r')
         lines = f.readlines()
@@ -77,12 +75,17 @@ class LearnPlay(object):
         for x in range(8):
             for y in range(8):
                 # This must be really slow
-                self._chess_pos[(x,y)] = eval(splitted.pop(0)[1]) 
+                self._chess_pos[(x, y)] = eval(splitted.pop(0)[1])
         print "Positions are in memory."
         f.close()
 
+    def gripper_open(self, percentage):
+        if percentage < 100:
+            return self._baxter_gripper.command_position(percentage)
+        else:
+            return False
 
-    def pick_piece(self, pos = "default"):
+    def pick_piece(self, pos="default"):
         if pos != "default":
             print "Cannot use any other position!"
             return
@@ -99,15 +102,14 @@ class LearnPlay(object):
         self._baxter_limb.move_to_joint_positions(
             self._default_pos[0]
         )
-        rospy.sleep(0.5) #sigh
+        rospy.sleep(0.5)  # sigh
         self._baxter_gripper.close()
         self._baxter_limb.move_to_joint_positions(
             self._default_pos[1]
         )
         self.picked = True
         print "Piece has been picked."
-        
-            
+
     def place_piece(self, pos):
         if not self.picked:
             print "Pick a piece first!"
@@ -120,29 +122,34 @@ class LearnPlay(object):
             self._baxter_limb.move_to_joint_positions(
                 self._chess_pos[pos][1])
             # closed
+            self._baxter_limb.set_joint_position_speed(0.05)
             self._baxter_limb.move_to_joint_positions(
                 self._chess_pos[pos][0])
-            self._baxter_gripper.open()
+            # self._baxter_gripper.open()
+            self.gripper_open(50)
             print "Piece has been placed."
             self.picked = False
-            rospy.sleep(0.5) # sigh
+            rospy.sleep(0.5)  # sigh
+            self._baxter_limb.set_joint_position_speed(0.05)
             self._baxter_limb.move_to_joint_positions(
                 self._chess_pos[pos][1])
+            self._baxter_limb.set_joint_position_speed(0.5)
+            self._baxter_gripper.open()
         except Exception:
-            print "Unknown location!" # This sucks. Seriously.
-                
-        
+            print "Unknown location!"  # This sucks. Seriously.
+
+
 def main():
-    
+
     limb = "right"
-    rospy.init_node('rsdk_learn_play_%s' % (limb)) 
+    rospy.init_node('rsdk_learn_play_%s' % (limb))
     lp = LearnPlay(limb)
     while(1):
         for i in range(8):
             lp.pick_piece()
             lp.place_piece((i,i))
-            
-    
+
+
     # 1 get data from vision
     # 2 start arms stuff
     # 3 wait for user pieces (3?)

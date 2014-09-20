@@ -88,7 +88,7 @@ class Calibrate(object):
         resp = self._iksvc(ik_request)
         return dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-    def _blink_light(self, io_component='left_itb_light_outer'):
+    def _blink_light(self, io_component="right_itb_light_outer"):
         """
         Blinks a Digital Output on then off.
         """
@@ -150,9 +150,9 @@ class Calibrate(object):
             cur_bottom_pose = self._the_pose
             for y in range(8):
                 for x in range(8):
-                    x_o = -0.05*x
-                    y_o = y * 0.05
-                    t = (y, x)  # yep
+                    x_o = 0.05*x
+                    y_o = y * 0.05 * -1
+                    t = (7 - y, 7 - x)  # yep
                     one = self._find_joint_position(
                         cur_bottom_pose,
                         x_off=x_o,
