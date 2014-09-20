@@ -9,12 +9,13 @@ import learn_play
 
 import baxter_interface
 
+
 def main():
     limb = "right"
-    
+
     rospy.init_node('learn_play_vision_%s' % (limb))
-    
-    baxter_limb = baxter_interface.Limb(limb)    
+
+    baxter_limb = baxter_interface.Limb(limb)
     # todo: make configurable
     starting_pos = {'right_s0': 0.5092816209960938,
                     'right_s1': -1.20800986907959,
