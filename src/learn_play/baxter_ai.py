@@ -55,7 +55,7 @@ class BaxterAI(object):
         for i in xrange(col, 7):
             if grid[row][i] == turn:
                 cnt += 1
-            elif cont == True or not grid[row][i] == 0:
+            elif cont or not grid[row][i] == 0:
                 break
         if cnt >= consec:
             return True
