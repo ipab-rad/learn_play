@@ -120,7 +120,7 @@ class ConnectFour(object):
         good_input = False
         while not good_input:
             self._depth = int(raw_input("Please enter difficulty "
-                                                     "level (1-4): "))
+                                        "level (1-4): "))
             if self._depth < 1 or self._depth > 4:
                 print "Invalid difficulty provided"
             else:
@@ -128,7 +128,7 @@ class ConnectFour(object):
         good_input = False
         while not good_input:
             self._turn = str(raw_input("Please enter who will go first "
-                                        "(baxter, me): "))
+                                       "(baxter, me): "))
             if self._turn == 'baxter':
                 self._turn = 1
                 good_input = True
@@ -219,9 +219,9 @@ class ConnectFour(object):
     def user_move(self):
         cnt = 0
         while True:
-            if (self._user_pieces == self._user_cnt and
-                self._total_pieces == self._round + 1 and
-                self._baxter_pieces == self._baxter_cnt):
+            if (self._user_pieces == self._user_cnt
+                and self._total_pieces == self._round + 1
+                    and self._baxter_pieces == self._baxter_cnt):
                 cnt += 1
             else:
                 cnt = 0
