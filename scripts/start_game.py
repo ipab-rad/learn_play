@@ -40,8 +40,6 @@ class LearnPlay(object):
         self.picked = False
 
         self._no_squares = 8
-        self._grid = ([[0 for _i in range(self._no_squares)]
-                      for _j in range(self._no_squares)])
 
         self.game_off = False
         self._turn = 0  # 1, 2 = baxter, human
@@ -50,10 +48,34 @@ class LearnPlay(object):
             exit(0)
         self._read_config(self._config_path)
 
+        self._grid = None
+        vision_topic = "/vision/learn_play_state/"
+        _grid_sub = rospy.Subscriber(vision_topic,
+                                     String,
+                                     self._on_state)
+        err_msg = ("Failed waiting for vision to "
+                   "be published on topic %s - start vision node" %
+                   vision_topic)
+
+        # Wait for vision node to start
+        it = rospy.Time.now()
+        while(not rospy.is_shutdown()):
+            rospy.sleep(0.1)
+            if self._grid is not None:
+                break
+            if rospy.Time.now() - it > rospy.Duration(2):
+                print err_msg
+                sys.exit(1)
+            it = rospy.Time.now()
+
+    def _on_state(self, msg):
+        data = eval(msg.data)
+        self._grid = data["baxter_count"]
+
     def _check_config(self):
         ri = ""
         while (1):
-            ri = raw_input("Have you calibrated the arm? [y/n]")
+            ri = raw_input("Have you calibrated the arm? [y/n] ")
             if ri.lower() == "y":
                 print "Awesome. Carry on."
                 return True
@@ -138,6 +160,23 @@ class LearnPlay(object):
         except Exception:
             print "Unknown location!"  # This sucks. Seriously.
 
+    def make_diag(self):
+        for i in range(8):
+            self.pick_piece()
+            self.place_piece((i, i))
+
+    def check_diag(self, buf):
+        for i in range(8):
+            if not (i, i) in buf:
+                return [False, (i, i)]
+        return [True, (-1, -1)]  # mmmmh
+
+    def fill_diag(self):
+        (b, t) = self.check_diag(self._grid)
+        if not b:
+            self.pick_piece()
+            self.place_piece(t)
+
 
 def main():
 
@@ -145,10 +184,11 @@ def main():
     rospy.init_node('rsdk_learn_play_%s' % (limb))
     lp = LearnPlay(limb)
     while(1):
-        for i in range(8):
-            lp.pick_piece()
-            lp.place_piece((i,i))
+        lp.fill_diag()
+    # lp.make_diag()
 
+    # while(1):
+    #     lp.fill_diag()
 
     # 1 get data from vision
     # 2 start arms stuff

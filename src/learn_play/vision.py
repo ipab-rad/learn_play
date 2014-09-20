@@ -1,3 +1,5 @@
+# TODO: add buffer to increase accuracy
+
 # import argparse
 import threading
 from copy import deepcopy
@@ -59,9 +61,9 @@ class LPVision(object):
         # more central
         # roi = region of interest
         self._roi_points = [[100, 200],
-                            [100, 100],
+                            [200, 200],
                             [200, 100],
-                            [200, 200]]  # magic
+                            [100, 100]]  # magic (clockwise)
         self._roi_move = False
         self._point_selected = -1
         self._gain_slider = 30
