@@ -6,8 +6,11 @@ import rospkg
 import rospy
 from std_msgs.msg import (
     String,
+)
+from sensor_msgs.msg import (
     Image,
 )
+
 import baxter_interface
 
 import cv
@@ -38,6 +41,8 @@ class LearnPlay(object):
         self._limb = limb
         self._baxter_limb = baxter_interface.Limb(self._limb)
         self._baxter_gripper = baxter_interface.Gripper(self._limb)
+        self._baxter_head = baxter_interface.Head()
+        self._baxter_head.set_pan(0.0)
         print "Calibrating gripper..."
         self._baxter_gripper.calibrate()
 
@@ -45,6 +50,7 @@ class LearnPlay(object):
         self._neutral_pos = {}
         self._chess_pos = {}
         self.picked = False
+        self._is_pickable = False
 
         self._no_squares = 8
 
@@ -66,6 +72,7 @@ class LearnPlay(object):
 
         # Wait for vision node to start
         it = rospy.Time.now()
+        print("Waiting for vision messages...")
         while(not rospy.is_shutdown()):
             rospy.sleep(0.1)
             if self._grid is not None:
@@ -78,6 +85,7 @@ class LearnPlay(object):
     def _on_state(self, msg):
         data = eval(msg.data)
         self._grid = data["baxter_count"]
+        self._is_pickable = data["picking_state"]
 
     def _check_config(self):
         ri = ""
@@ -124,6 +132,9 @@ class LearnPlay(object):
         self._baxter_limb.move_to_joint_positions(
             self._neutral_pos
         )
+        while 1:
+            if self._is_pickable:
+                break
         print rospy.Time.now(), "Picking piece..."
         self._baxter_limb.move_to_joint_positions(
             self._default_pos[1]
@@ -165,7 +176,8 @@ class LearnPlay(object):
             self._baxter_limb.set_joint_position_speed(0.5)
             self._baxter_gripper.open()
         except Exception:
-            print "Unknown location!"  # This sucks. Seriously.
+            print "Unknown location!"  # This should not be there.
+            # Seriously.
 
     def make_diag(self):
         for i in range(8):
@@ -182,9 +194,11 @@ class LearnPlay(object):
         (b, t) = self.check_diag(self._grid)
         if not b:
             self.send_image(self._angry_face_path)
+            self.head_turn()
             self.pick_piece()
             self.place_piece(t)
         else:
+            self._baxter_head.command_nod()
             self.send_image(self._good_face_path)
 
     def send_image(self, path):
@@ -199,7 +213,14 @@ class LearnPlay(object):
         pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
         pub.publish(msg)
         # Sleep to allow for image to be published.
-        rospy.sleep(1)
+        # rospy.sleep(1)
+
+    def head_turn(self, direction=-1):
+        """
+        -1 = left, 1 = right
+        """
+        self._baxter_head.set_pan(direction*0.8, 50)
+        self._baxter_head.set_pan(0.0, 10)
 
 
 def main():
@@ -207,7 +228,17 @@ def main():
     limb = "right"
     rospy.init_node('learn_play_%s' % (limb))
     lp = LearnPlay(limb)
+    rest = {'right_e0': 1.3042671634094238,
+            'right_e1': 0.9602719721191407,
+            'right_s0': -0.5361262847534181,
+            'right_s1': -0.3535825712036133,
+            'right_w0': -1.1048496612121583,
+            'right_w1': 1.54203418526001,
+            'right_w2': -0.5004612314758301}
+
     while(1):
+        lp._baxter_limb.move_to_joint_positions(rest)
+        rospy.sleep(1.0)
         lp.fill_diag()
 
 
