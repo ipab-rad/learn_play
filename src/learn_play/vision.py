@@ -211,21 +211,23 @@ class LPVision(object):
                                               (self._side_roi,
                                                self._side_roi))
         # ENHANCE! *puts glasses on*
-        # self._blurred = cv2.GaussianBlur(self._projected, (0, 0), 3)
-        # self._projected = cv2.addWeighted(self._projected,
-        #                                   1.5,
-        #                                   self._blurred,
-        #                                   -0.5,
-        #                                   0,
-        #                                   self._projected)
+        self._blurred = cv2.GaussianBlur(self._projected, (0, 0), 3)
+        self._projected = cv2.addWeighted(self._projected,
+                                          1.5,
+                                          self._blurred,
+                                          -0.5,
+                                          0,
+                                          self._projected)
 
     def _filter_red(self):
         # Finds red colors in HSV space
         hsv = cv2.cvtColor(self._projected, cv2.COLOR_BGR2HSV)
         # lower_red = np.array([165, 60, 60])
         # upper_red = np.array([180, 255, 255])
-        lower_orange = np.array([3, 50, 50])  # TODO: those suck.
-        upper_orange = np.array([17, 255, 255])
+        lower_orange = np.array([2, 50, 50])  # TODO: those suck.
+        upper_orange = np.array([22, 255, 255])
+        # lower_orange = np.array([9, 100, 100])
+        # upper_orange = np.array([29, 255, 255])
         self._red = cv2.inRange(hsv, lower_orange, upper_orange)
         cv.ShowImage('Orange', cv.fromarray(self._red))
         # print rospy.Time.now()
