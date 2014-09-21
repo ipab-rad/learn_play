@@ -51,6 +51,7 @@ class LearnPlay(object):
         self._chess_pos = {}
         self.picked = False
         self._is_pickable = False
+        self._nodded = False
 
         self._no_squares = 8
 
@@ -197,8 +198,11 @@ class LearnPlay(object):
             self.head_turn()
             self.pick_piece()
             self.place_piece(t)
+            self._nodded = False
         else:
-            self._baxter_head.command_nod()
+            if not self._nodded:
+                self._baxter_head.command_nod()
+                self._nodded = True
             self.send_image(self._good_face_path)
 
     def send_image(self, path):
