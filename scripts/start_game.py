@@ -1,15 +1,19 @@
 #!/usr/bin/python
 
-import argparse
 import sys
-from copy import deepcopy
-import os
+
 import rospkg
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import (
+    String,
+    Image,
+)
 import baxter_interface
 
+import cv
+import cv_bridge
 import learn_play
+
 
 class LearnPlay(object):
     """This class defines the actual game structure (and procedure). It
@@ -25,8 +29,11 @@ class LearnPlay(object):
         #  1 - occupied
 
         self._rp = rospkg.RosPack()
-        self._config_path = self._rp.get_path('learn_play') +\
-            '/config/positions.config'
+        self._config_path = self._rp.get_path('learn_play') + '/config/'
+        self._images_path = self._rp.get_path('learn_play') + '/share/images/'
+        self._config_file_path = self._config_path + 'positions.config'
+        self._good_face_path = self._images_path + "good_face.jpg"
+        self._angry_face_path = self._images_path + "angry_face.jpg"
 
         self._limb = limb
         self._baxter_limb = baxter_interface.Limb(self._limb)
@@ -46,7 +53,7 @@ class LearnPlay(object):
         self._no_pieces = 0  # Number of pieces on board
         if (not self._check_config()):
             exit(0)
-        self._read_config(self._config_path)
+        self._read_config(self._config_file_path)
 
         self._grid = None
         vision_topic = "/vision/learn_play_state/"
@@ -174,28 +181,35 @@ class LearnPlay(object):
     def fill_diag(self):
         (b, t) = self.check_diag(self._grid)
         if not b:
+            self.send_image(self._angry_face_path)
             self.pick_piece()
             self.place_piece(t)
+        else:
+            self.send_image(self._good_face_path)
+
+    def send_image(self, path):
+        """
+        Send the image located at the specified path to the head
+        display on Baxter.
+
+        @param path: path to the image file to load and send
+        """
+        img = cv.LoadImage(path)
+        msg = cv_bridge.CvBridge().cv_to_imgmsg(img, encoding="bgr8")
+        pub = rospy.Publisher('/robot/xdisplay', Image, latch=True)
+        pub.publish(msg)
+        # Sleep to allow for image to be published.
+        rospy.sleep(1)
 
 
 def main():
 
     limb = "right"
-    rospy.init_node('rsdk_learn_play_%s' % (limb))
+    rospy.init_node('learn_play_%s' % (limb))
     lp = LearnPlay(limb)
     while(1):
         lp.fill_diag()
-    # lp.make_diag()
 
-    # while(1):
-    #     lp.fill_diag()
-
-    # 1 get data from vision
-    # 2 start arms stuff
-    # 3 wait for user pieces (3?)
-    # 4 calculates next move
-    # 5 make move
-    # 6 goto 3
 
 if __name__ == "__main__":
     main()
