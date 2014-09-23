@@ -1,6 +1,9 @@
 # TODO: add buffer to increase accuracy
+# The code is very ugly and
+# should be rewritten in C++ soon.
 
 # import argparse
+
 import threading
 from copy import deepcopy
 # from os import system
