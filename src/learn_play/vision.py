@@ -1,12 +1,6 @@
-# TODO: add buffer to increase accuracy
-# The code is very ugly and
-# should be rewritten in C++ soon.
-
-# import argparse
-
 import threading
 from copy import deepcopy
-# from os import system
+
 
 import numpy as np
 import cv2
@@ -28,12 +22,12 @@ from std_msgs.msg import (
     String,
 )
 
-# TODO: Document all the things.
+
 
 
 class LPVision(object):
     def __init__(self, limb):
-        # Start camera
+
         self._side = limb
         self._camera_name = self._side + "_hand_camera"
         print ("Opening " + self._camera_name + "...")
@@ -54,16 +48,12 @@ class LPVision(object):
         self.cv_image = None
         self._bridge = CvBridge()
 
-        # self.yellow_sample = ()
         self.red_sample = ()
         self.blue_sample = ()
 
-        # self.yellows = None
         self.reds = None
         self.blues = None
 
-        # more central
-        # roi = region of interest
         self._roi_points = [[100, 200],
                             [200, 200],
                             [200, 100],
