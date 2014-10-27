@@ -68,7 +68,12 @@ class LPVision(object):
         self._roi_move = False
         self._point_selected = -1
         self._gain_slider = 30
-        self._red_thresh = 30
+        self._high_colour_slider = 22
+        self._low_colour_slider = 2
+        self._low_colour = np.array([self._low_colour_slider, 50, 50])
+        self._high_colour = np.array([self._high_colour_slider, 255, 255])
+
+        self._inrange_colour_thresh = 30
         # self._yellow_thresh = 100
         self._slider_time = rospy.Time.now()
         self._gain_set = False
@@ -91,7 +96,7 @@ class LPVision(object):
                                   np.uint8)
         self._image_grid = np.zeros((self._side_roi, self._side_roi, 3),
                                     np.uint8)
-        self._red = np.zeros((self._side_roi, self._side_roi),
+        self._inrange_colour = np.zeros((self._side_roi, self._side_roi),
                              np.uint8)
         self._projected = np.zeros((self._side_roi, self._side_roi, 3),
                                    np.uint8)
@@ -151,7 +156,7 @@ class LPVision(object):
 
             # self._filter_yellow()
             self._filter_red()
-            self._process_colors(deepcopy(self._red))
+            self._process_colors(deepcopy(self._inrange_colour))
 
             self._update_image_grid()
             self._is_pickable = self._project_other_roi()
@@ -183,8 +188,15 @@ class LPVision(object):
         cv.CreateTrackbar("Gain", "Learn Play game RGB", self._gain_slider,
                           100, self._on_gain_slider)
         cv.CreateTrackbar("Red Threshold", "Learn Play game RGB",
-                          self._red_thresh, 500, self._on_red_slider)
+                          self._inrange_colour_thresh, 500, self._on_red_slider)
         # TODO: create HSV bar for colour
+        cv.CreateTrackbar("High red", "Learn Play game RGB",
+                          self._high_colour_slider,
+                          40, self._on_high_colour_slider)
+        cv.CreateTrackbar("Low red", "Learn Play game RGB",
+                          self._low_colour_slider,
+                          40, self._on_low_colour_slider)
+
         cv.WaitKey(3)
 
         # projects roi chosen by user
@@ -215,14 +227,11 @@ class LPVision(object):
     def _filter_red(self):
         # Finds red colors in HSV space
         hsv = cv2.cvtColor(self._projected, cv2.COLOR_BGR2HSV)
-        # lower_red = np.array([165, 60, 60])
-        # upper_red = np.array([180, 255, 255])
-        lower_orange = np.array([2, 50, 50])  # TODO: those suck.
-        upper_orange = np.array([22, 255, 255])
-        # lower_orange = np.array([9, 100, 100])
         # upper_orange = np.array([29, 255, 255])
-        self._red = cv2.inRange(hsv, lower_orange, upper_orange)
-        cv.ShowImage('Orange', cv.fromarray(self._red))
+        self._inrange_colour = cv2.inRange(hsv, self._low_colour,
+                                           self._high_colour)
+
+        cv.ShowImage('Orange', cv.fromarray(self._inrange_colour))
         # print rospy.Time.now()
 
     def _process_colors(self, red):
@@ -253,7 +262,7 @@ class LPVision(object):
                         for x in xrange(0, self._square_side_roi, 2):
                             if red[y + y_offset, x + x_offset] == 255:
                                 red_cnt += 1
-                                if red_cnt > self._red_thresh:  # Speed tweak
+                                if red_cnt > self._inrange_colour_thresh:  # Speed tweak
                                     cv2.putText(self._image_grid,
                                                 'o',
                                                 (x_offset + 20, y_offset + 40),
@@ -263,7 +272,7 @@ class LPVision(object):
                                     self._grid[row][col] = 1
                                     self._pieces_positions.append((row, col))
                                     break
-                        if red_cnt > self._red_thresh:
+                        if red_cnt > self._inrange_colour_thresh:
                             break  # (sigh)
                             # else:
                             #     # print "what"
@@ -326,7 +335,15 @@ class LPVision(object):
         self._slider_time = rospy.Time.now()
 
     def _on_red_slider(self, pos):
-        self._red_thresh = pos
+        self._inrange_colour_thresh = pos
+
+    def _on_high_colour_slider(self, pos):
+        self._high_colour_slider = pos
+        self._high_colour = np.array([self._high_colour_slider, 255, 255])
+
+    def _on_low_colour_slider(self, pos):
+        self._low_colour_slider = pos
+        self._low_colour = np.array([self._low_colour_slider, 50, 50])
 
     def _on_mouse_click(self, event, x, y, flags, param):
         if event == cv.CV_EVENT_LBUTTONDOWN:
@@ -376,19 +393,20 @@ class LPVision(object):
         hsv = cv2.cvtColor(self._other_projected, cv2.COLOR_BGR2HSV)
         # lower_red = np.array([165, 60, 60])
         # upper_red = np.array([180, 255, 255])
-        lower_orange = np.array([3, 50, 50])  # TODO: those suck.
-        upper_orange = np.array([17, 255, 255])
-        self._other_red = cv2.inRange(hsv, lower_orange, upper_orange)
-        cv.ShowImage('Other orange', cv.fromarray(self._other_red))
+
+        self._inrange_colour = cv2.inRange(hsv, self._low_colour,
+                                           self._high_colour)
+
+        cv.ShowImage('Colour', cv.fromarray(self._inrange_colour))
         # print rospy.Time.now()
 
         # the following can probably be optimized
         red_cnt = 0
         for x in range(self._side_other_roi):
             for y in range(self._side_other_roi):
-                if red_cnt > self._red_thresh:  # Speed tweak
+                if red_cnt > self._inrange_colour_thresh:  # Speed tweak
                     return True
                 else:
-                    if self._other_red[x, y] == 255:
+                    if self._inrange_colour[x, y] == 255:
                         red_cnt += 1
         return False
