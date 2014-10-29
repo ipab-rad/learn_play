@@ -1,33 +1,25 @@
 import threading
 from copy import deepcopy
-
-
 import numpy as np
 import cv2
 from cv2 import cv
 from cv_bridge import CvBridge
-
 import rospy
 import baxter_interface
 
 from geometry_msgs.msg import (
     PolygonStamped,
 )
-
 from sensor_msgs.msg import (
     Image,
 )
-
 from std_msgs.msg import (
     String,
 )
 
 
-
-
 class LPVision(object):
     def __init__(self, limb):
-
         self._side = limb
         self._camera_name = self._side + "_hand_camera"
         print ("Opening " + self._camera_name + "...")
@@ -35,35 +27,28 @@ class LPVision(object):
         self._camera.open()
         self._camera.resolution = [640, 400]
         self._camera.gain = 20
-
         self._side_roi = 400
         self._side_other_roi = 50
         self._no_squares = 8
         # 400 / 8 = 50
         self._square_side_roi = self._side_roi / self._no_squares
-
         self.grid = [[0 for _i in range(self._no_squares)]
                      for _j in range(self._no_squares)]
         print self.grid
         self.cv_image = None
         self._bridge = CvBridge()
-
         self.red_sample = ()
         self.blue_sample = ()
-
         self.reds = None
         self.blues = None
-
         self._roi_points = [[100, 200],
                             [200, 200],
                             [200, 100],
                             [100, 100]]  # magic (clockwise)
-
         self._other_roi_points = [[375, 400],
                                   [425, 400],
                                   [425, 350],
                                   [375, 350]]  # magic (clockwise)
-
         self._is_pickable = False
         self._roi_move = False
         self._point_selected = -1
@@ -72,26 +57,20 @@ class LPVision(object):
         self._low_colour_slider = 2
         self._low_colour = np.array([self._low_colour_slider, 50, 50])
         self._high_colour = np.array([self._high_colour_slider, 255, 255])
-
         self._inrange_colour_thresh = 30
         # self._yellow_thresh = 100
         self._slider_time = rospy.Time.now()
         self._gain_set = False
         self._text = ['X', 'Y', 'R', 'G', 'B']
         self._pixel = {}
-        # initialize data structure
         for label in self._text:
             self._pixel[label] = 0.0
         self._vector = {}
-
         self._grid = [[0 for _i in range(self._no_squares)]
                       for _j in range(self._no_squares)]
         self._pnts = [[0 for i in range(self._square_side_roi + 1)]
                       for j in range(self._square_side_roi + 1)]
-
         self._pieces_positions = []
-
-        # initialize images
         self._np_image = np.zeros((self._side_roi, self._side_roi, 3),
                                   np.uint8)
         self._image_grid = np.zeros((self._side_roi, self._side_roi, 3),
@@ -105,24 +84,20 @@ class LPVision(object):
                                           3),
                                          np.uint8)
         self.subLock = threading.Lock()
-
         camera_topic = '/cameras/' + self._camera_name + '/image'
         _camera_sub = rospy.Subscriber(
             camera_topic,
             Image,
             self._on_camera)
-
         roi_topic = '/learn_play/localize/grid_pixels'
         _roi_sub = rospy.Subscriber(
             roi_topic,
             PolygonStamped,
             self._on_roi)
-
         board_state_topic = '/vision/learn_play_state'
         self._board_state_pub = rospy.Publisher(
             board_state_topic,
             String)
-
         rest = {'right_e0': 1.3042671634094238,
                 'right_e1': 0.9602719721191407,
                 'right_s0': -0.5361262847534181,
@@ -130,16 +105,13 @@ class LPVision(object):
                 'right_w0': -1.1048496612121583,
                 'right_w1': 1.54203418526001,
                 'right_w2': -0.5004612314758301}
-
         self._other_arm = baxter_interface.Limb("right")
         self._other_arm.move_to_joint_positions(rest)
-
         print ' - All set - '
         print " - - - - - - - "
         self._process_images()
 
     def _process_images(self):
-
         print " - Starting to process images! - "
         while not rospy.is_shutdown():
             t = rospy.Time.now()
@@ -149,15 +121,12 @@ class LPVision(object):
                 self._gain_set = False
                 print 'Setting GAIN!'
                 self._camera.gain = self._gain_slider
-
             # process red/yellow image
             self._show_image()
             self._project_roi()
-
             # self._filter_yellow()
             self._filter_red()
             self._process_colors(deepcopy(self._inrange_colour))
-
             self._update_image_grid()
             self._is_pickable = self._project_other_roi()
             # publish state
@@ -165,41 +134,32 @@ class LPVision(object):
             rospy.sleep(0.1)
 
     def _show_image(self):
-
         self.subLock.acquire(True)
         local_image = deepcopy(self._np_image)
         self.subLock.release()
-
         # draw circles
         for idx, points in enumerate(self._roi_points):
             cv2.circle(local_image, (points[0], points[1]), 5, (255, 0, 0), 2)
-
         # draw green lines
         cv2.polylines(local_image, np.int32([np.array(self._roi_points)]),
                       1, (0, 255, 0), 2)
-
         cv2.polylines(local_image, np.int32([np.array(
             self._other_roi_points)]),
             1, (0, 255, 0), 2)
-
         cv.ShowImage("Learn Play game RGB", cv.fromarray(local_image))
-
         cv.SetMouseCallback("Learn Play game RGB", self._on_mouse_click, 0)
         cv.CreateTrackbar("Gain", "Learn Play game RGB", self._gain_slider,
                           100, self._on_gain_slider)
         cv.CreateTrackbar("Red Threshold", "Learn Play game RGB",
-                          self._inrange_colour_thresh, 500, self._on_red_slider)
-        # TODO: create HSV bar for colour
+                          self._inrange_colour_thresh, 500,
+                          self._on_red_slider)
         cv.CreateTrackbar("High red", "Learn Play game RGB",
                           self._high_colour_slider,
                           40, self._on_high_colour_slider)
         cv.CreateTrackbar("Low red", "Learn Play game RGB",
                           self._low_colour_slider,
                           40, self._on_low_colour_slider)
-
         cv.WaitKey(3)
-
-        # projects roi chosen by user
 
     def _project_roi(self):
         warped_in = np.float32([np.array(self._roi_points)])
@@ -215,7 +175,6 @@ class LPVision(object):
                                               M,
                                               (self._side_roi,
                                                self._side_roi))
-        # ENHANCE! *puts glasses on*
         self._blurred = cv2.GaussianBlur(self._projected, (0, 0), 3)
         self._projected = cv2.addWeighted(self._projected,
                                           1.5,
@@ -225,28 +184,23 @@ class LPVision(object):
                                           self._projected)
 
     def _filter_red(self):
-        # Finds red colors in HSV space
+        """
+        Finds red colors in HSV space
+        """
         hsv = cv2.cvtColor(self._projected, cv2.COLOR_BGR2HSV)
-        # upper_orange = np.array([29, 255, 255])
         self._inrange_colour = cv2.inRange(hsv, self._low_colour,
                                            self._high_colour)
-
         cv.ShowImage('Orange', cv.fromarray(self._inrange_colour))
-        # print rospy.Time.now()
 
     def _process_colors(self, red):
         # look down each column building up from bottom
         self._grid = [[0 for _i in range(self._no_squares)]
                       for _j in range(self._no_squares)]
-        # print self._grid
-        # print '----------'
         self._image_grid = deepcopy(self._projected)
-        # print self._image_grid
         self._pieces_positions = []
         for col in xrange(self._no_squares):
             cur_row = True
             x_offset = self._square_side_roi * col
-            # print "x = ", x_offset
             # Look from the bottom up checking if piece is there
             for row in xrange(self._no_squares):
                 if cur_row:  # runs first time
@@ -257,7 +211,6 @@ class LPVision(object):
                     if len(red) != self._side_roi:
                         print 'BAILING - IMAGE SIZE IS UNEXPECTED'
                         return
-
                     for y in xrange(0, self._square_side_roi, 2):
                         for x in xrange(0, self._square_side_roi, 2):
                             if red[y + y_offset, x + x_offset] == 255:
@@ -274,10 +227,6 @@ class LPVision(object):
                                     break
                         if red_cnt > self._inrange_colour_thresh:
                             break  # (sigh)
-                            # else:
-                            #     # print "what"
-                            #     cur_row = False
-                            #     break
 
     def _update_image_grid(self):
         for idx in xrange(1, self._no_squares):
@@ -324,7 +273,6 @@ class LPVision(object):
             local_image = np.asarray(self.cv_image)
         except Exception:
             print 'Cannot get image from Baxter'
-
         self.subLock.acquire(True)
         self._np_image = deepcopy(local_image)
         self.subLock.release()
@@ -366,12 +314,6 @@ class LPVision(object):
         """
         Returns Bool
         """
-        # Copy Image
-        # show Image - done in _show_image
-        # show square - done in _show_image
-        # take square and process colour
-        # return boolean if > threshold
-
         local_image = deepcopy(self._np_image)
 
     def _project_other_roi(self):
@@ -388,18 +330,13 @@ class LPVision(object):
                                                     M,
                                                     (self._side_other_roi,
                                                      self._side_other_roi))
-
         # Finds red colors in HSV space
         hsv = cv2.cvtColor(self._other_projected, cv2.COLOR_BGR2HSV)
-        # lower_red = np.array([165, 60, 60])
-        # upper_red = np.array([180, 255, 255])
 
         self._inrange_colour = cv2.inRange(hsv, self._low_colour,
                                            self._high_colour)
 
         cv.ShowImage('Colour', cv.fromarray(self._inrange_colour))
-        # print rospy.Time.now()
-
         # the following can probably be optimized
         red_cnt = 0
         for x in range(self._side_other_roi):
