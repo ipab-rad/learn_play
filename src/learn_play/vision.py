@@ -25,7 +25,7 @@ class LPVision(object):
         print ("Opening " + self._camera_name + "...")
         self._camera = baxter_interface.CameraController(self._camera_name)
         self._camera.open()
-        self._camera.resolution = [640, 400]
+        self._camera.resolution = [960, 600]
         self._camera.gain = 20
         self._side_roi = 400
         self._side_other_roi = 50
@@ -41,14 +41,15 @@ class LPVision(object):
         self.blue_sample = ()
         self.reds = None
         self.blues = None
-        self._roi_points = [[100, 200],
-                            [200, 200],
-                            [200, 100],
-                            [100, 100]]  # magic (clockwise)
-        self._other_roi_points = [[375, 400],
-                                  [425, 400],
-                                  [425, 350],
-                                  [375, 350]]  # magic (clockwise)
+        self._roi_points = [[365, 235],
+                            [700, 235],
+                            [706, 593],
+                            [358, 593]]  # magic (clockwise)
+
+        self._other_roi_points = [[270, 390],
+                                  [315, 390],
+                                  [315, 435],
+                                  [270, 435]]  # magic (clockwise)
         self._is_pickable = False
         self._roi_move = False
         self._point_selected = -1
@@ -57,8 +58,7 @@ class LPVision(object):
         self._low_colour_slider = 2
         self._low_colour = np.array([self._low_colour_slider, 50, 50])
         self._high_colour = np.array([self._high_colour_slider, 255, 255])
-        self._inrange_colour_thresh = 30
-        # self._yellow_thresh = 100
+        self._inrange_colour_thresh = 90
         self._slider_time = rospy.Time.now()
         self._gain_set = False
         self._text = ['X', 'Y', 'R', 'G', 'B']
@@ -98,15 +98,7 @@ class LPVision(object):
         self._board_state_pub = rospy.Publisher(
             board_state_topic,
             String)
-        rest = {'right_e0': 1.3042671634094238,
-                'right_e1': 0.9602719721191407,
-                'right_s0': -0.5361262847534181,
-                'right_s1': -0.3535825712036133,
-                'right_w0': -1.1048496612121583,
-                'right_w1': 1.54203418526001,
-                'right_w2': -0.5004612314758301}
-        self._other_arm = baxter_interface.Limb("right")
-        self._other_arm.move_to_joint_positions(rest)
+
         print ' - All set - '
         print " - - - - - - - "
         self._process_images()
@@ -124,7 +116,6 @@ class LPVision(object):
             # process red/yellow image
             self._show_image()
             self._project_roi()
-            # self._filter_yellow()
             self._filter_red()
             self._process_colors(deepcopy(self._inrange_colour))
             self._update_image_grid()
