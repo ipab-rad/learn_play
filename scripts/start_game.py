@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-
+import random
 import rospkg
 import rospy
 from std_msgs.msg import (
@@ -37,6 +37,8 @@ class LearnPlay(object):
         self._config_file_path = self._config_path + 'positions.config'
         self._good_face_path = self._images_path + "good_face.jpg"
         self._angry_face_path = self._images_path + "angry_face.jpg"
+        self._cheeky_face_path = self._images_path + "cheeky_face.jpg"
+
 
         self._limb = limb
         self._baxter_limb = baxter_interface.Limb(self._limb)
@@ -45,6 +47,14 @@ class LearnPlay(object):
         self._baxter_head.set_pan(0.0)
         print "Calibrating gripper..."
         self._baxter_gripper.calibrate()
+
+        self._rest_position = {'right_e0': 1.3042671634094238,
+                               'right_e1': 0.9602719721191407,
+                               'right_s0': -0.5361262847534181,
+                               'right_s1': -0.3535825712036133,
+                               'right_w0': -1.1048496612121583,
+                               'right_w1': 1.54203418526001,
+                               'right_w2': -0.5004612314758301}
 
         self._default_pos = {}
         self._neutral_pos = {}
@@ -56,6 +66,8 @@ class LearnPlay(object):
         self._no_squares = 8
 
         self.game_off = False
+        self._input_done = False
+        self.running = True
         self._turn = 0  # 1, 2 = baxter, human
         self._no_pieces = 0  # Number of pieces on board
         if (not self._check_config()):
@@ -71,6 +83,10 @@ class LearnPlay(object):
                    "be published on topic %s - start vision node" %
                    vision_topic)
 
+        self._circle_io = baxter_interface.DigitalIO(self._limb +
+                                                     '_lower_button')
+        self._circle_io.state_changed.connect(self._connects)
+
         # Wait for vision node to start
         it = rospy.Time.now()
         print("Waiting for vision messages...")
@@ -82,6 +98,13 @@ class LearnPlay(object):
                 print err_msg
                 sys.exit(1)
             it = rospy.Time.now()
+
+    def _connects(self, value):
+        """
+        Changes value as button gets pressed.
+        """
+        if value:
+            self._input_done = True
 
     def _on_state(self, msg):
         data = eval(msg.data)
@@ -156,9 +179,6 @@ class LearnPlay(object):
             print "Pick a piece first!"
             return
         try:
-            self._baxter_limb.move_to_joint_positions(
-                self._neutral_pos
-            )
             print rospy.Time.now(), "Placing piece to", pos, "..."
             self._baxter_limb.move_to_joint_positions(
                 self._chess_pos[pos][1])
@@ -226,24 +246,49 @@ class LearnPlay(object):
         self._baxter_head.set_pan(direction*0.8, 50)
         self._baxter_head.set_pan(0.0, 10)
 
+    def get_next_move(self, grid):
+        full_grid = [(i, j) for i in range(8) for j in range(8)]
+        remaining = list(set(full_grid) - set(grid))
+        return random.choice(remaining)
+
+    def start_game(self):
+        rospy.sleep(1)
+        self._baxter_limb.move_to_joint_positions(self._rest_position)
+        old_status = self._grid
+        while(self.running):
+            self._baxter_limb.move_to_joint_positions(self._rest_position)
+            # wait for user to make move
+            self.send_image(self._good_face_path)
+            while(1):
+                status = self._grid
+                if len(status) - len(old_status) == 1:
+                    break
+            move = self.get_next_move(status)
+            self.send_image(self._angry_face_path)
+            print old_status
+            print status
+            print move
+            self.pick_piece()
+            self.place_piece(move)
+            # wait user for input
+            self.send_image(self._cheeky_face_path)
+            while(1):
+                if(self._input_done):
+                    self._input_done = False
+                    print "Input from user!"
+                    break
+            rospy.sleep(1)
+            old_status = self._grid
+
 
 def main():
 
     limb = "right"
     rospy.init_node('learn_play_%s' % (limb))
     lp = LearnPlay(limb)
-    rest = {'right_e0': 1.3042671634094238,
-            'right_e1': 0.9602719721191407,
-            'right_s0': -0.5361262847534181,
-            'right_s1': -0.3535825712036133,
-            'right_w0': -1.1048496612121583,
-            'right_w1': 1.54203418526001,
-            'right_w2': -0.5004612314758301}
-
     while(1):
-        lp._baxter_limb.move_to_joint_positions(rest)
         rospy.sleep(1.0)
-        lp.fill_diag()
+        lp.start_game()
 
 
 if __name__ == "__main__":
