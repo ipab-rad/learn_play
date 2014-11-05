@@ -22,7 +22,7 @@ def main():
     lpv = learn_play.LPVision(limb)
     # lpv.check_board()
     while not rospy.is_shutdown():
-        rospy.sleep(1.0)
+        rospy.sleep(0.5)
 
 if __name__ == '__main__':
     main()
