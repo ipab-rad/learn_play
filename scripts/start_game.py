@@ -276,6 +276,7 @@ class LearnPlay(object):
                 if(self._input_done):
                     self._input_done = False
                     print "Input from user!"
+                    self._baxter_head.command_nod()
                     break
             rospy.sleep(1)
             old_status = self._grid
