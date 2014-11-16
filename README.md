@@ -13,13 +13,14 @@ Requirements
 * `opencv`
 * `ROS hydro`
 * `baxter_interface` in development branch
+* `Python`
 
 Running the demo
 ================
 
 * `rosrun learn_play calibrate.py`
-* Start the vision (and calibrate it)
-* Start the game
+* `rosrun learn_play start_vision.py`
+* `rosrun learn_play start_game.py`
 
 TODO
 ====
@@ -38,23 +39,4 @@ TODO
 
 * Use pygame to draw grid
 
-* Write AI
-
-Stuff
-=====
-
-* if number_pieces == odd, turn = baxter, else turn = human
-
-* Left arm reaches point x, y, z+epsilon and then it goes to x, y, 0 (to release piece)
-  Linear movements are essential.
-
-
-
-
-
-
-
-
-
-
-
+* Write AI (Right now it's e-greedy with e = 1 (that is, completely random)
