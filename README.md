@@ -39,6 +39,8 @@ TODO
 
 * Use pygame to draw grid
 
+* Document vision
+
 * Write AI (Right now it's e-greedy with e = 1 (that is, completely random)
 
 * Implement Inverse Reinforcement Learning system for board
